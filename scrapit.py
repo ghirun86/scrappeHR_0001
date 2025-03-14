@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from googlesearch import search
 import pandas as pd
 
-# Function to scrape selected websites
+# Function to scrape a website
 def scrape_website(url):
     try:
         response = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
@@ -20,45 +20,37 @@ def scrape_website(url):
         return "Error", str(e)
 
 # Streamlit UI
-st.title("🔎 Web Scraper & Google Search")
+st.title("🔍 Google Search & Web Scraper")
 
 # User input for search query
-query = st.text_input("Enter your search keyword:", "Andre Rosiade")
+query = st.text_input("Enter your search keyword:", "malin kundang")
+num_results = 10  # Fix to 10 results
 
-# Number of results
-num_results = st.slider("Number of Google search results:", 5, 20, 10)
-
-# Fetch results
+# Button to start the search
 if st.button("Search & Scrape"):
     st.write(f"🔍 Searching Google for: **{query}**...")
     
     # Get Google search results
     links = list(search(query, num_results=num_results))
     
-    # Store selected links
-    selected_links = []
-    with st.form("select_links_form"):
-        st.write("### ✅ Select Websites to Scrape:")
-        for idx, url in enumerate(links):
-            selected = st.checkbox(url, key=idx)
-            if selected:
-                selected_links.append(url)
-        submitted = st.form_submit_button("Scrape Selected Websites")
+    scraped_data = []
+    
+    # Scrape each website
+    for url in links:
+        title, content = scrape_website(url)
+        scraped_data.append([url, title, content])
 
-    # Scrape selected websites
-    if submitted and selected_links:
-        scraped_data = []
-        for url in selected_links:
-            title, content = scrape_website(url)
-            scraped_data.append([url, title, content])
-        
-        # Convert to DataFrame and display
-        df = pd.DataFrame(scraped_data, columns=["URL", "Title", "Content"])
-        st.write("### 📑 Scraped Data:")
-        st.dataframe(df)
+    # Convert to DataFrame and display
+    df = pd.DataFrame(scraped_data, columns=["URL", "Title", "Content"])
+    st.write("### 📑 Scraped Data:")
+    st.dataframe(df)
 
-        # Save to CSV
-        csv_filename = "scraped_results.csv"
-        df.to_csv(csv_filename, index=False, encoding="utf-8")
-        st.success(f"✅ Data saved to **{csv_filename}**")
-        st.download_button(label="📥 Download CSV", data=df.to_csv(index=False), file_name="scraped_results.csv", mime="text/csv")
+    # Save to CSV
+    csv_filename = "scraped_results.csv"
+    csv_data = df.to_csv(index=False).encode("utf-8")
+
+    # Download Button
+    st.download_button(label="📥 Download CSV",
+                       data=csv_data,
+                       file_name=csv_filename,
+                       mime="text/csv")
