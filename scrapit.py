@@ -32,11 +32,15 @@ if st.button("Search & Scrape"):
     
     # Get Google search results
     links = list(search(query, num_results=num_results))
+
+    # Step 2: Allow user to **filter websites** based on keywords
+    filter_keywords = ["news", "detik", "cnn", "kompas", "wikipedia", "tempo"]  # Example filters for news and Wikipedia
+    filtered_links = [url for url in links if any(keyword in url for keyword in filter_keywords)]
     
     scraped_data = []
     
     # Scrape each website
-    for url in links:
+    for url in filtered_links:
         title, content = scrape_website(url)
         scraped_data.append([url, title, content])
 
